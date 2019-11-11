@@ -62,7 +62,7 @@ public class EvalParser {
 		ASTnode temp = new ASTnode();
 		switch (nextToken.tokenType) {
 		case INT:
-			temp = var_decl();
+			temp = var_decl(true);
 			nextToken = lookahead();
 			match(nextToken, TokenType.SEMICOLON);
 			break;
@@ -75,7 +75,7 @@ public class EvalParser {
 			result.stmts.add(temp);
 			switch (nextToken.tokenType) {
 			case INT:
-				temp = var_decl();
+				temp = var_decl(true);
 				nextToken = lookahead();
 				match(nextToken, TokenType.SEMICOLON);
 				break;
@@ -94,13 +94,10 @@ public class EvalParser {
 		Token nextToken = lookahead();	match(nextToken, TokenType.VOID);
 		nextToken = lookahead();	match(nextToken, TokenType.ID);	
 		String funcName = nextToken.tokenVal;
-		//localTable = new Table();
-		
-		// changed tino
-		// get new local table, and set global table as previous
-        //////////////////////////////////////////////////////////////////// 
-		localTable = new Table(globalTable);
-		////////////////////////////////////////////////////////////////////
+
+		Table prev  = localTable;
+		prev.printWholeTable();
+		localTable = new Table(prev);
         
         if( globalTable.find(nextToken) == null )	{
             globalTable.add(funcName, SymbolType.FUNCTION);
@@ -113,44 +110,35 @@ public class EvalParser {
         nextToken = lookahead();	match( nextToken, TokenType.RIGHTPAREN );
         nextToken = lookahead();	match( nextToken, TokenType.LEFTCURLY );
 		ASTnode result = stmt_list();
-		
-        ArrayList<ThreeAddressObject> newObjects = new ArrayList<>(  );
-        
-		// changed tino
-        //CodeGenTuple aTuple = new CodeGenTuple( newObjects, localTable, funcName );
-        // funcTuples.add( aTuple );
-		
 		nextToken = lookahead();	match(nextToken, TokenType.RIGHTCURLY);
-		
-		// changed tino
-		// out of function, set local table to global;
-		//////////////
-		localTable = globalTable;
-		///////////
-		
 		return result;
 	}
 
 	private void generateTACForFunc(ASTnode result, boolean b) {
 	}
 
-	private ASTnode var_decl() throws Exception {
+	private ASTnode var_decl(boolean isGlobal) throws Exception {
 		Token nextToken = lookahead();
 		match(nextToken, TokenType.INT);
 		nextToken = lookahead();
 		match(nextToken, TokenType.ID);
-		
-		// changed tino
-		/////////////
-		if( localTable.findLocally(nextToken) == null )	{
-			localTable.add(nextToken.tokenVal, SymbolType.INT);
-        }
-        else	{
-            System.out.println( "ERROR: Function or variable \'" + nextToken.tokenVal + "\' already defined" );
-            System.exit(1);
-        }
-		////////////
-		
+
+		if(isGlobal)	{
+			if(globalTable.findLocally(nextToken) == null )	{
+				globalTable.add(nextToken.tokenVal, SymbolType.INT);
+			}
+			else {
+				throw new CompilerException( "ERROR: Function or variable \'" + nextToken.tokenVal + "\' already defined" );
+			}
+		}
+		else	{
+			if(localTable.findLocally(nextToken) == null && globalTable.findLocally(nextToken)==null )	{
+				localTable.add(nextToken.tokenVal, SymbolType.INT);
+			}
+			else {
+				throw new CompilerException( "ERROR: Function or variable \'" + nextToken.tokenVal + "\' already defined" );
+			}
+		}
 		ASTnode aNode = new ASTnode(TokenType.ID, nextToken.tokenVal);
 		return aNode;
 	}
@@ -185,7 +173,7 @@ public class EvalParser {
 		Token nextToken = lookahead();
 		ASTnode result = new ASTnode();
 		if (nextToken != null && nextToken.tokenType == TokenType.INT) {
-			result = var_decl();
+			result = var_decl(false);
 			nextToken = lookahead();
 			if (nextToken.tokenType == TokenType.SEMICOLON) {
 				match(nextToken, TokenType.SEMICOLON);
@@ -814,8 +802,9 @@ public class EvalParser {
 
 	public static void main(String args[]) {
 		EvalParser parser = new EvalParser();
-		String eval = "private class test { int z; void main2(){ int x = 12 ; } void newFunc() {int x; int z;}}";
+		String eval = "private class test { int i; int y; void main2(){ int x = 12 ; int  w; } void main5(){ int x = 12 ; int  w; } }";
 		ASTnode root = parser.program(eval);
 		System.out.println(parser.emitTAC(root, false));
+		parser.globalTable.printWholeTable();
 	}
 }
