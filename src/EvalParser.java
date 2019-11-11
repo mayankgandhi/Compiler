@@ -15,6 +15,10 @@ public class EvalParser {
 	int rlabelID = 0; // Label id for loops
 	private String threeAddress = "";
 
+	private Table localTable;
+	private Object globalTable;
+	private ArrayList<Integer> funcTuples;
+
 	public ASTnode program(String eval) {
 		threeAddressResult = "";
 		evalString = eval;
@@ -42,7 +46,7 @@ public class EvalParser {
 			match(nextToken, TokenType.RIGHTCURLY);
 			root.stmts.add(programNode);
 		} catch (Exception e) {
-			System.out.println("ERROR: Syntax error - " + e.getMessage());
+			System.out.println("ERROR: Syntax error : " + e.getMessage());
 			System.exit(-1);
 		}
 		return root;
@@ -86,20 +90,31 @@ public class EvalParser {
 	}
 
 	private ASTnode func() throws Exception {
-		Token nextToken = lookahead();
-		match(nextToken, TokenType.VOID);
-		nextToken = lookahead();
-		match(nextToken, TokenType.ID);
-		nextToken = lookahead();
-		match(nextToken, TokenType.LEFTPAREN);
-		nextToken = lookahead();
-		match(nextToken, TokenType.RIGHTPAREN);
-		nextToken = lookahead();
-		match(nextToken, TokenType.LEFTCURLY);
+		Token nextToken = lookahead();	match(nextToken, TokenType.VOID);
+		nextToken = lookahead();	match(nextToken, TokenType.ID);	
+		String funcName = nextToken.tokenVal;
+        localTable = new Table();
+        if( globalTable.find(nextToken) == null )	{
+            
+        }
+        else	{
+            System.out.println( "ERROR: Function \'" + nextToken.tokenVal + "\' already defined" );
+        }
+        nextToken = lookahead();	match( nextToken, TokenType.LEFTPAREN );
+        nextToken = lookahead();	match( nextToken, TokenType.RIGHTPAREN );
+        nextToken = lookahead();	match( nextToken, TokenType.LEFTCURLY );
 		ASTnode result = stmt_list();
-		nextToken = lookahead();
-		match(nextToken, TokenType.RIGHTCURLY);
+		
+        ArrayList<ThreeAddressObject> newObjects = new ArrayList<>(  );
+        
+        CodeGenTuple aTuple = new CodeGenTuple( newObjects, localTable, funcName );
+        funcTuples.add( aTuple );
+		
+		nextToken = lookahead();	match(nextToken, TokenType.RIGHTCURLY);
 		return result;
+	}
+
+	private void generateTACForFunc(ASTnode result, boolean b) {
 	}
 
 	private ASTnode var_decl() throws Exception {
@@ -188,7 +203,7 @@ public class EvalParser {
 			// Evaluate inside expression
 			result = boolCompare();
 			if (result == null) {
-				throw new Exception("No expression inside if");
+				throw new CompilerException("No expression inside if");
 			}
 			nextToken = lookahead();
 			match(nextToken, TokenType.RIGHTPAREN);
@@ -214,7 +229,7 @@ public class EvalParser {
 			// Evaluate inside expression
 			result = boolCompare();
 			if (result == null) {
-				throw new Exception("No expression inside while");
+				throw new CompilerException("No expression inside while");
 			}
 			nextToken = lookahead();
 			match(nextToken, TokenType.RIGHTPAREN);
@@ -407,7 +422,7 @@ public class EvalParser {
 					parenCounter--;
 					match(nextToken, TokenType.RIGHTPAREN);
 					if (!expressionInside) {
-						throw new Exception("No expression inside parentheses");
+						throw new CompilerException("No expression inside parentheses");
 					}
 				}
 				return aNode;
@@ -424,7 +439,7 @@ public class EvalParser {
 				return aNode;
 			}
 			if (parenCounter != 0) {
-				throw new Exception("Parenthesis count wrong");
+				throw new CompilerException("Parenthesis count wrong");
 			}
 		} catch (Exception e) {
 			System.out.println("ERROR: Syntax error - " + e.getMessage());
@@ -439,7 +454,7 @@ public class EvalParser {
 		evalString = eval;
 		try {
 			if (!evalString.isEmpty()) {
-				throw new Exception();
+				throw new CompilerException("evalString is empty");
 			}
 		} catch (Exception e) {
 			System.out.println("Input string not empty");
@@ -721,13 +736,14 @@ public class EvalParser {
 	}
 
 	private Token lookahead() {
+	
 		try {
 			if (evalString.isEmpty()) {
 				return null;
 			}
 			Token aToken = (Token) scan.extractToken(new StringBuilder(evalString));
 			if (aToken == null) {
-				throw new Exception("Token is null");
+				System.out.println(evalString);
 			} else {
 				return aToken;
 			}
@@ -741,7 +757,7 @@ public class EvalParser {
 	private void match(Token aToken, TokenType expectedToken) {
 		try {
 			if (aToken == null) {
-				throw new Exception("Token is null");
+				throw new CompilerException("Token is null");
 			}
 			while (Character.isWhitespace(evalString.charAt(0))) {
 				evalString = evalString.substring(1);
@@ -749,7 +765,7 @@ public class EvalParser {
 			if (aToken.tokenType == expectedToken) {
 				evalString = evalString.substring(aToken.tokenVal.length());
 			} else {
-				throw new Exception(
+				throw new CompilerException(
 						"Unexpected token type: " + aToken.tokenType + " , Expected Type: " + expectedToken);
 			}
 		} catch (Exception e) {
@@ -760,7 +776,7 @@ public class EvalParser {
 
 	public static void main(String args[]) {
 		EvalParser parser = new EvalParser();
-		String eval = eval = "class yes { void main() { int xx = 3; while(3 < 2) { int xx = 4;} } }";
+		String eval = "public class test {void main() {";
 		ASTnode root = parser.program(eval);
 		System.out.println(parser.emitTAC(root, false));
 	}

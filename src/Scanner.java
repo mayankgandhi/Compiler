@@ -185,4 +185,11 @@ public class Scanner {
         }
         return result.toString();
     }
+
+    public static void main(String args[])
+    {
+        String eval = "private class test { int z ; void main2 ( ) { z = 14 ; } ";
+        Scanner ob = new Scanner();
+        System.out.println(ob.extractTokens(eval));
+    }
 }

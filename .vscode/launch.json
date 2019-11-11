@@ -1,0 +1,18 @@
+{
+    "configurations": [
+        {
+            "type": "java",
+            "name": "CodeLens (Launch) - Scanner",
+            "request": "launch",
+            "mainClass": "Scanner",
+            "projectName": "COMPILER"
+        },
+        {
+            "type": "java",
+            "name": "CodeLens (Launch) - EvalParser",
+            "request": "launch",
+            "mainClass": "EvalParser",
+            "projectName": "COMPILER"
+        }
+    ]
+}
