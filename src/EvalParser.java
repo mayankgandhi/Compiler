@@ -16,10 +16,11 @@ public class EvalParser {
 	private String threeAddress = "";
 
 	private Table localTable;
-	private Object globalTable;
+	private Table globalTable = new Table();
 	private ArrayList<Integer> funcTuples;
 
 	public ASTnode program(String eval) {
+		localTable = globalTable;
 		threeAddressResult = "";
 		evalString = eval;
 		tempID = 0;
@@ -93,12 +94,20 @@ public class EvalParser {
 		Token nextToken = lookahead();	match(nextToken, TokenType.VOID);
 		nextToken = lookahead();	match(nextToken, TokenType.ID);	
 		String funcName = nextToken.tokenVal;
-        localTable = new Table();
+		//localTable = new Table();
+		
+		// changed tino
+		// get new local table, and set global table as previous
+        //////////////////////////////////////////////////////////////////// 
+		localTable = new Table(globalTable);
+		////////////////////////////////////////////////////////////////////
+        
         if( globalTable.find(nextToken) == null )	{
-            
+            globalTable.add(funcName, SymbolType.FUNCTION);
         }
         else	{
             System.out.println( "ERROR: Function \'" + nextToken.tokenVal + "\' already defined" );
+            System.exit(1);
         }
         nextToken = lookahead();	match( nextToken, TokenType.LEFTPAREN );
         nextToken = lookahead();	match( nextToken, TokenType.RIGHTPAREN );
@@ -107,10 +116,18 @@ public class EvalParser {
 		
         ArrayList<ThreeAddressObject> newObjects = new ArrayList<>(  );
         
-        CodeGenTuple aTuple = new CodeGenTuple( newObjects, localTable, funcName );
-        funcTuples.add( aTuple );
+		// changed tino
+        //CodeGenTuple aTuple = new CodeGenTuple( newObjects, localTable, funcName );
+        // funcTuples.add( aTuple );
 		
 		nextToken = lookahead();	match(nextToken, TokenType.RIGHTCURLY);
+		
+		// changed tino
+		// out of function, set local table to global;
+		//////////////
+		localTable = globalTable;
+		///////////
+		
 		return result;
 	}
 
@@ -122,6 +139,18 @@ public class EvalParser {
 		match(nextToken, TokenType.INT);
 		nextToken = lookahead();
 		match(nextToken, TokenType.ID);
+		
+		// changed tino
+		/////////////
+		if( localTable.findLocally(nextToken) == null )	{
+			localTable.add(nextToken.tokenVal, SymbolType.INT);
+        }
+        else	{
+            System.out.println( "ERROR: Function or variable \'" + nextToken.tokenVal + "\' already defined" );
+            System.exit(1);
+        }
+		////////////
+		
 		ASTnode aNode = new ASTnode(TokenType.ID, nextToken.tokenVal);
 		return aNode;
 	}
@@ -174,6 +203,15 @@ public class EvalParser {
 		} else if (nextToken != null && nextToken.tokenType == TokenType.ID) {
 			match(nextToken, TokenType.ID);
 			result = new ASTnode(TokenType.ID, nextToken.tokenVal);
+			
+			// changed tino
+			///////////////////////////
+			if (localTable.find(nextToken) == null) {
+				System.out.println( "ERROR: variable \'" + nextToken.tokenVal + "\' not defined" );
+	            System.exit(1);
+			}
+			
+			///////////////////////////
 			nextToken = lookahead();
 			match(nextToken, TokenType.ASSIGN);
 			ASTnode mid = new ASTnode(TokenType.ASSIGN);
@@ -776,7 +814,7 @@ public class EvalParser {
 
 	public static void main(String args[]) {
 		EvalParser parser = new EvalParser();
-		String eval = "public class test {void main() {";
+		String eval = "private class test { int z; void main2(){ int x = 12 ; } void newFunc() {int x; int z;}}";
 		ASTnode root = parser.program(eval);
 		System.out.println(parser.emitTAC(root, false));
 	}

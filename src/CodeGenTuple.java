@@ -10,5 +10,9 @@ public class CodeGenTuple {
 		this.localTable=localTable;
 		this.funcName=funcName;
 	}
+	
+	public void add() {
+		
+	}
 
 }
