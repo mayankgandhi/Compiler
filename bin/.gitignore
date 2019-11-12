@@ -1,0 +1,16 @@
+/.DS_Store
+/ASTnode.class
+/AdvancedJava.class
+/AdvancedJavaTest.class
+/CodeGenTuple.class
+/CompilerException.class
+/EvalParser.class
+/Operand.class
+/Scanner.class
+/Symbol.class
+/SymbolType.class
+/Table.class
+/ThreeAddressObject$Operation.class
+/ThreeAddressObject.class
+/Token.class
+/TokenType.class

@@ -17,7 +17,8 @@ public class EvalParser {
 
 	private Table localTable;
 	private Table globalTable = new Table();
-	private ArrayList<Integer> funcTuples;
+	private ArrayList<CodeGenTuple> funcTuples;
+	private ArrayList<ThreeAddressObject> tacObjects;
 
 	public ASTnode program(String eval) {
 		localTable = globalTable;
@@ -91,30 +92,331 @@ public class EvalParser {
 	}
 
 	private ASTnode func() throws Exception {
-		Token nextToken = lookahead();	match(nextToken, TokenType.VOID);
-		nextToken = lookahead();	match(nextToken, TokenType.ID);	
+		Token nextToken = lookahead();
+		match(nextToken, TokenType.VOID);
+		nextToken = lookahead();
+		match(nextToken, TokenType.ID);
 		String funcName = nextToken.tokenVal;
 
-		Table prev  = localTable;
-		prev.printWholeTable();
+		Table prev = localTable;
 		localTable = new Table(prev);
-        
-        if( globalTable.find(nextToken) == null )	{
-            globalTable.add(funcName, SymbolType.FUNCTION);
-        }
-        else	{
-            System.out.println( "ERROR: Function \'" + nextToken.tokenVal + "\' already defined" );
-            System.exit(1);
-        }
-        nextToken = lookahead();	match( nextToken, TokenType.LEFTPAREN );
-        nextToken = lookahead();	match( nextToken, TokenType.RIGHTPAREN );
-        nextToken = lookahead();	match( nextToken, TokenType.LEFTCURLY );
+
+		if (globalTable.find(nextToken) == null) {
+			globalTable.add(funcName, SymbolType.FUNCTION);
+		} else {
+			System.out.println("ERROR: Function \'" + nextToken.tokenVal + "\' already defined");
+			System.exit(1);
+		}
+		nextToken = lookahead();
+		match(nextToken, TokenType.LEFTPAREN);
+		nextToken = lookahead();
+		match(nextToken, TokenType.RIGHTPAREN);
+		nextToken = lookahead();
+		match(nextToken, TokenType.LEFTCURLY);
 		ASTnode result = stmt_list();
-		nextToken = lookahead();	match(nextToken, TokenType.RIGHTCURLY);
+
+		// generateTACForFunc(result, false);
+		// ArrayList<ThreeAddressObject> newObjects = new ArrayList<>();
+		// for (ThreeAddressObject t : tacObjects) {
+		// 	newObjects.add(t);
+		// }
+		// tacObjects.clear();
+
+		// CodeGenTuple aTuple = new CodeGenTuple(newObjects, localTable, funcName);
+		// funcTuples.add(aTuple);
+
+		nextToken = lookahead();
+		match(nextToken, TokenType.RIGHTCURLY);
 		return result;
 	}
 
-	private void generateTACForFunc(ASTnode result, boolean b) {
+	private void generateTACForFunc(ASTnode aNode, boolean isOR) {
+
+		try {
+			if (aNode == null) {
+				return;
+			}
+
+			if (aNode.type == TokenType.WHILE) {
+				// threeAddress += "repeatLabel" + aNode.rLoc + "\n";
+				Operand start = new Operand(aNode.rLoc);
+				ThreeAddressObject startObject = new ThreeAddressObject(ThreeAddressObject.Operation.START_WHILE,
+						start);
+				tacObjects.add(startObject);
+			}
+
+			if (aNode.type == TokenType.OR) {
+				isOR = true;
+			}
+
+			generateTACForFunc(aNode.left, isOR);
+
+			if (aNode.type == TokenType.OR) {
+				isOR = false;
+			}
+
+			generateTACForFunc(aNode.right, isOR);
+
+			for (ASTnode theNode : aNode.stmts) {
+				generateTACForFunc(theNode, isOR);
+			}
+
+			switch (aNode.type) {
+			case NUM:
+				// threeAddress += "temp" + aNode.loc + " = " + aNode.value + "\n";
+				Operand num_src1 = new Operand(aNode.value);
+				Operand num_dest = new Operand(printIdOrLoc(aNode));
+				ThreeAddressObject numObject = new ThreeAddressObject(ThreeAddressObject.Operation.NUM, num_src1,
+						num_dest);
+				tacObjects.add(numObject);
+				break;
+			case ASSIGN:
+				// threeAddress += printIdOrLoc( aNode.left ) + " = " + printIdOrLoc(
+				// aNode.right ) + "\n";
+				Operand assign_src1 = new Operand(printIdOrLoc(aNode.right));
+				Operand assign_dest = new Operand(printIdOrLoc(aNode.left));
+				ThreeAddressObject assignObject = new ThreeAddressObject(ThreeAddressObject.Operation.ASSIGN,
+						assign_src1, assign_dest);
+				tacObjects.add(assignObject);
+				break;
+			case PLUS:
+				// threeAddress += "temp" + aNode.loc + " = " + printIdOrLoc( aNode.left ) + " +
+				// " + printIdOrLoc( aNode.right ) + "\n";
+				Operand plus_src1 = new Operand(printIdOrLoc(aNode.left));
+				Operand plus_src2 = new Operand(printIdOrLoc(aNode.right));
+				Operand plus_dest = new Operand(printIdOrLoc(aNode));
+				ThreeAddressObject plusObject = new ThreeAddressObject(ThreeAddressObject.Operation.PLUS, plus_src1,
+						plus_src2, plus_dest);
+				tacObjects.add(plusObject);
+				break;
+			case MINUS:
+				// threeAddress += "temp" + aNode.loc + " = " + printIdOrLoc( aNode.left ) + " -
+				// " + printIdOrLoc( aNode.right ) + "\n";
+				Operand minus_src1 = new Operand(printIdOrLoc(aNode.left));
+				Operand minus_src2 = new Operand(printIdOrLoc(aNode.right));
+				Operand minus_dest = new Operand(printIdOrLoc(aNode));
+				ThreeAddressObject minusObject = new ThreeAddressObject(ThreeAddressObject.Operation.MINUS, minus_src1,
+						minus_src2, minus_dest);
+				tacObjects.add(minusObject);
+				break;
+			case MUL:
+				// threeAddress += "temp" + aNode.loc + " = " + printIdOrLoc( aNode.left ) + " *
+				// " + printIdOrLoc( aNode.right ) + "\n";
+				Operand mul_src1 = new Operand(printIdOrLoc(aNode.left));
+				Operand mul_src2 = new Operand(printIdOrLoc(aNode.right));
+				Operand mul_dest = new Operand(printIdOrLoc(aNode));
+				ThreeAddressObject mulObject = new ThreeAddressObject(ThreeAddressObject.Operation.MUL, mul_src1,
+						mul_src2, mul_dest);
+				tacObjects.add(mulObject);
+				break;
+			case DIV:
+				// threeAddress += "temp" + aNode.loc + " = " + printIdOrLoc( aNode.left ) + " /
+				// " + printIdOrLoc( aNode.right ) + "\n";
+				Operand div_src1 = new Operand(printIdOrLoc(aNode.left));
+				Operand div_src2 = new Operand(printIdOrLoc(aNode.right));
+				Operand div_dest = new Operand(printIdOrLoc(aNode));
+				ThreeAddressObject divObject = new ThreeAddressObject(ThreeAddressObject.Operation.DIV, div_src1,
+						div_src2, div_dest);
+				tacObjects.add(divObject);
+				break;
+			case LT:
+				// threeAddress += "IF_LT: " + printIdOrLoc( aNode.left ) + ", " +
+				// printIdOrLoc( aNode.right ) + ", " + "trueLabel" + aNode.tLoc + "\n";
+				Operand lt_src1 = new Operand(printIdOrLoc(aNode.left));
+				Operand lt_src2 = new Operand(printIdOrLoc(aNode.right));
+				Operand lt_dest = new Operand(aNode.tLoc);
+				ThreeAddressObject ltObject = new ThreeAddressObject(ThreeAddressObject.Operation.LT, lt_src1, lt_src2,
+						lt_dest);
+				tacObjects.add(ltObject);
+
+				// threeAddress += "GOTO: falseLabel" + aNode.fLoc + "\n";
+
+				Operand lt_goto = new Operand(aNode.fLoc);
+				ThreeAddressObject ltGotoObject = new ThreeAddressObject(ThreeAddressObject.Operation.GOTO, lt_goto);
+				tacObjects.add(ltGotoObject);
+
+				if (isOR) {
+					// threeAddress += "falseLabel" + aNode.fLoc + "\n";
+					Operand lt_falseLabel = new Operand("falselabel" + aNode.fLoc);
+					ThreeAddressObject ltFalseObject = new ThreeAddressObject(ThreeAddressObject.Operation.LABEL,
+							lt_falseLabel);
+					tacObjects.add(ltFalseObject);
+				} else {
+					// threeAddress += "trueLabel" + aNode.tLoc + "\n";
+					Operand lt_trueLabel = new Operand("truelabel" + aNode.tLoc);
+					ThreeAddressObject ltTrueObject = new ThreeAddressObject(ThreeAddressObject.Operation.LABEL,
+							lt_trueLabel);
+					tacObjects.add(ltTrueObject);
+				}
+				break;
+			case GT:
+				// threeAddress += "IF_GT: " + printIdOrLoc( aNode.left ) + ", " +
+				// printIdOrLoc( aNode.right ) + ", " + "trueLabel" + aNode.tLoc + "\n";
+				Operand gt_src1 = new Operand(printIdOrLoc(aNode.left));
+				Operand gt_src2 = new Operand(printIdOrLoc(aNode.right));
+				Operand gt_dest = new Operand(aNode.tLoc);
+				ThreeAddressObject gtObject = new ThreeAddressObject(ThreeAddressObject.Operation.GT, gt_src1, gt_src2,
+						gt_dest);
+				tacObjects.add(gtObject);
+
+				// threeAddress += "GOTO: falseLabel" + aNode.fLoc + "\n";
+				Operand gt_goto = new Operand(aNode.fLoc);
+				ThreeAddressObject gtGotoObject = new ThreeAddressObject(ThreeAddressObject.Operation.GOTO, gt_goto);
+				tacObjects.add(gtGotoObject);
+
+				if (isOR) {
+					// threeAddress += "falseLabel" + aNode.fLoc + "\n";
+					Operand gt_falseLabel = new Operand("falselabel" + aNode.fLoc);
+					ThreeAddressObject gtFalseObject = new ThreeAddressObject(ThreeAddressObject.Operation.LABEL,
+							gt_falseLabel);
+					tacObjects.add(gtFalseObject);
+				} else {
+					// threeAddress += "trueLabel" + aNode.tLoc + "\n";
+					Operand gt_trueLabel = new Operand("truelabel" + aNode.tLoc);
+					ThreeAddressObject gtTrueObject = new ThreeAddressObject(ThreeAddressObject.Operation.LABEL,
+							gt_trueLabel);
+					tacObjects.add(gtTrueObject);
+				}
+				break;
+			case LTE:
+				// threeAddress += "IF_LTE: " + printIdOrLoc( aNode.left ) + ", " +
+				// printIdOrLoc( aNode.right ) + ", " + "trueLabel" + aNode.tLoc + "\n";
+				Operand lte_src1 = new Operand(printIdOrLoc(aNode.left));
+				Operand lte_src2 = new Operand(printIdOrLoc(aNode.right));
+				Operand lte_dest = new Operand(aNode.tLoc);
+				ThreeAddressObject lteObject = new ThreeAddressObject(ThreeAddressObject.Operation.LTE, lte_src1,
+						lte_src2, lte_dest);
+				tacObjects.add(lteObject);
+
+				// threeAddress += "GOTO: falseLabel" + aNode.fLoc + "\n";
+				Operand lte_goto = new Operand(aNode.fLoc);
+				ThreeAddressObject lteGotoObject = new ThreeAddressObject(ThreeAddressObject.Operation.GOTO, lte_goto);
+				tacObjects.add(lteGotoObject);
+
+				if (isOR) {
+					// threeAddress += "falseLabel" + aNode.fLoc + "\n";
+					Operand lte_falseLabel = new Operand("falselabel" + aNode.fLoc);
+					ThreeAddressObject lteFalseObject = new ThreeAddressObject(ThreeAddressObject.Operation.LABEL,
+							lte_falseLabel);
+					tacObjects.add(lteFalseObject);
+				} else {
+					// threeAddress += "trueLabel" + aNode.tLoc + "\n";
+					Operand lte_trueLabel = new Operand("truelabel" + aNode.tLoc);
+					ThreeAddressObject lteTrueObject = new ThreeAddressObject(ThreeAddressObject.Operation.LABEL,
+							lte_trueLabel);
+					tacObjects.add(lteTrueObject);
+				}
+				break;
+			case GTE:
+				// threeAddress += "IF_GTE: " + printIdOrLoc( aNode.left ) + ", " +
+				// printIdOrLoc( aNode.right ) + ", " + "trueLabel" + aNode.tLoc + "\n";
+				Operand gte_src1 = new Operand(printIdOrLoc(aNode.left));
+				Operand gte_src2 = new Operand(printIdOrLoc(aNode.right));
+				Operand gte_dest = new Operand(aNode.tLoc);
+				ThreeAddressObject gteObject = new ThreeAddressObject(ThreeAddressObject.Operation.GTE, gte_src1,
+						gte_src2, gte_dest);
+				tacObjects.add(gteObject);
+
+				// threeAddress += "GOTO: falseLabel" + aNode.fLoc + "\n";
+				Operand gte_goto = new Operand(aNode.fLoc);
+				ThreeAddressObject gteGotoObject = new ThreeAddressObject(ThreeAddressObject.Operation.GOTO, gte_goto);
+				tacObjects.add(gteGotoObject);
+
+				if (isOR) {
+					// threeAddress += "falseLabel" + aNode.fLoc + "\n";
+					Operand gte_falseLabel = new Operand("falselabel" + aNode.fLoc);
+					ThreeAddressObject gteFalseObject = new ThreeAddressObject(ThreeAddressObject.Operation.LABEL,
+							gte_falseLabel);
+					tacObjects.add(gteFalseObject);
+				} else {
+					// threeAddress += "trueLabel" + aNode.tLoc + "\n";
+					Operand gte_trueLabel = new Operand("truelabel" + aNode.tLoc);
+					ThreeAddressObject gteTrueObject = new ThreeAddressObject(ThreeAddressObject.Operation.LABEL,
+							gte_trueLabel);
+					tacObjects.add(gteTrueObject);
+				}
+				break;
+			case EQUALS:
+				// threeAddress += "IF_EQ: " + printIdOrLoc( aNode.left ) + ", " +
+				// printIdOrLoc( aNode.right ) + ", " + "trueLabel" + aNode.tLoc + "\n";
+				Operand equals_src1 = new Operand(printIdOrLoc(aNode.left));
+				Operand equals_src2 = new Operand(printIdOrLoc(aNode.right));
+				Operand equals_dest = new Operand(aNode.tLoc);
+				ThreeAddressObject equalsObject = new ThreeAddressObject(ThreeAddressObject.Operation.EQUALS,
+						equals_src1, equals_src2, equals_dest);
+				tacObjects.add(equalsObject);
+
+				// threeAddress += "GOTO: falseLabel" + aNode.fLoc + "\n";
+				Operand equals_goto = new Operand(aNode.fLoc);
+				ThreeAddressObject equalsGotoObject = new ThreeAddressObject(ThreeAddressObject.Operation.GOTO,
+						equals_goto);
+				tacObjects.add(equalsGotoObject);
+
+				if (isOR) {
+					// threeAddress += "falseLabel" + aNode.fLoc + "\n";
+					Operand equals_falseLabel = new Operand("falselabel" + aNode.fLoc);
+					ThreeAddressObject equalsFalseObject = new ThreeAddressObject(ThreeAddressObject.Operation.LABEL,
+							equals_falseLabel);
+					tacObjects.add(equalsFalseObject);
+				} else {
+					// threeAddress += "trueLabel" + aNode.tLoc + "\n";
+					Operand equals_trueLabel = new Operand("truelabel" + aNode.tLoc);
+					ThreeAddressObject equalsTrueObject = new ThreeAddressObject(ThreeAddressObject.Operation.LABEL,
+							equals_trueLabel);
+					tacObjects.add(equalsTrueObject);
+				}
+				break;
+			case NOTEQUALS:
+				// threeAddress += "IF_NE: " + printIdOrLoc( aNode.left ) + ", " +
+				// printIdOrLoc( aNode.right ) + ", " + "trueLabel" + aNode.tLoc + "\n";
+				Operand not_equals_src1 = new Operand(printIdOrLoc(aNode.left));
+				Operand not_equals_src2 = new Operand(printIdOrLoc(aNode.right));
+				Operand not_equals_dest = new Operand(aNode.tLoc);
+				ThreeAddressObject notEqualsObject = new ThreeAddressObject(ThreeAddressObject.Operation.NOTEQUALS,
+						not_equals_src1, not_equals_src2, not_equals_dest);
+				tacObjects.add(notEqualsObject);
+
+				// threeAddress += "GOTO: falseLabel" + aNode.fLoc + "\n";
+				Operand not_equals_goto = new Operand(aNode.fLoc);
+				ThreeAddressObject notEqualsGotoObject = new ThreeAddressObject(ThreeAddressObject.Operation.GOTO,
+						not_equals_goto);
+				tacObjects.add(notEqualsGotoObject);
+
+				if (isOR) {
+					// threeAddress += "falseLabel" + aNode.fLoc + "\n";
+					Operand not_equals_falseLabel = new Operand("falselabel" + aNode.fLoc);
+					ThreeAddressObject notEqualsFalseObject = new ThreeAddressObject(ThreeAddressObject.Operation.LABEL,
+							not_equals_falseLabel);
+					tacObjects.add(notEqualsFalseObject);
+				} else {
+					// threeAddress += "trueLabel" + aNode.tLoc + "\n";
+					Operand not_equals_trueLabel = new Operand("truelabel" + aNode.tLoc);
+					ThreeAddressObject notEqualsTrueObject = new ThreeAddressObject(ThreeAddressObject.Operation.LABEL,
+							not_equals_trueLabel);
+					tacObjects.add(notEqualsTrueObject);
+				}
+				break;
+			case IF:
+				// threeAddress += "falseLabel" + aNode.fLoc + "\n";
+				Operand if_dest = new Operand(aNode.fLoc);
+				ThreeAddressObject ifObject = new ThreeAddressObject(ThreeAddressObject.Operation.IF, if_dest);
+				tacObjects.add(ifObject);
+				break;
+			case WHILE:
+				// threeAddress += "GOTO: repeatLabel" + aNode.rLoc + "\n" +
+				// "falseLabel" + aNode.fLoc + "\n";
+				Operand while_src1 = new Operand(aNode.rLoc);
+				Operand while_dest = new Operand(aNode.fLoc);
+				ThreeAddressObject whileObject = new ThreeAddressObject(ThreeAddressObject.Operation.WHILE, while_src1,
+						while_dest);
+				tacObjects.add(whileObject);
+				break;
+			}
+		} catch (Exception e) {
+			System.out.println("ERROR: Syntax error");
+			System.exit(-1);
+		}
+
 	}
 
 	private ASTnode var_decl(boolean isGlobal) throws Exception {
@@ -123,20 +425,19 @@ public class EvalParser {
 		nextToken = lookahead();
 		match(nextToken, TokenType.ID);
 
-		if(isGlobal)	{
-			if(globalTable.findLocally(nextToken) == null )	{
+		if (isGlobal) {
+			if (globalTable.findLocally(nextToken) == null) {
 				globalTable.add(nextToken.tokenVal, SymbolType.INT);
+			} else {
+				throw new CompilerException(
+						"ERROR: Function or variable \'" + nextToken.tokenVal + "\' already defined");
 			}
-			else {
-				throw new CompilerException( "ERROR: Function or variable \'" + nextToken.tokenVal + "\' already defined" );
-			}
-		}
-		else	{
-			if(localTable.findLocally(nextToken) == null && globalTable.findLocally(nextToken)==null )	{
+		} else {
+			if (localTable.findLocally(nextToken) == null && globalTable.findLocally(nextToken) == null) {
 				localTable.add(nextToken.tokenVal, SymbolType.INT);
-			}
-			else {
-				throw new CompilerException( "ERROR: Function or variable \'" + nextToken.tokenVal + "\' already defined" );
+			} else {
+				throw new CompilerException(
+						"ERROR: Function or variable \'" + nextToken.tokenVal + "\' already defined");
 			}
 		}
 		ASTnode aNode = new ASTnode(TokenType.ID, nextToken.tokenVal);
@@ -191,14 +492,14 @@ public class EvalParser {
 		} else if (nextToken != null && nextToken.tokenType == TokenType.ID) {
 			match(nextToken, TokenType.ID);
 			result = new ASTnode(TokenType.ID, nextToken.tokenVal);
-			
+
 			// changed tino
 			///////////////////////////
 			if (localTable.find(nextToken) == null) {
-				System.out.println( "ERROR: variable \'" + nextToken.tokenVal + "\' not defined" );
-	            System.exit(1);
+				System.out.println("ERROR: variable \'" + nextToken.tokenVal + "\' not defined");
+				System.exit(1);
 			}
-			
+
 			///////////////////////////
 			nextToken = lookahead();
 			match(nextToken, TokenType.ASSIGN);
@@ -762,7 +1063,7 @@ public class EvalParser {
 	}
 
 	private Token lookahead() {
-	
+
 		try {
 			if (evalString.isEmpty()) {
 				return null;
@@ -802,9 +1103,9 @@ public class EvalParser {
 
 	public static void main(String args[]) {
 		EvalParser parser = new EvalParser();
-		String eval = "private class test { int i; int y; void main2(){ int x = 12 ; int  w; } void main5(){ int x = 12 ; int  w; } }";
+		String eval = "private class test { int i; int y; void main2(){ if (3 < 5) { i = 10;} int  w; } void main5(){ int  w; } }";
 		ASTnode root = parser.program(eval);
+		System.out.println("---------");
 		System.out.println(parser.emitTAC(root, false));
-		parser.globalTable.printWholeTable();
 	}
 }

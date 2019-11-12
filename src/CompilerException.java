@@ -1,3 +1,7 @@
+/**
+ * @author mayankgandhi
+ *
+ */
 class CompilerException extends Exception
 {
     /**

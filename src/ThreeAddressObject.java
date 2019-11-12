@@ -29,16 +29,16 @@ public class ThreeAddressObject { // Three Address Object
 	}
 
 	ThreeAddressObject(Operation oper, Operand value, Operand dest) {
-		op = oper;
-		src1 = value;
-		destination = dest;
+		this.op = oper;
+		this.src1 = value;
+		this.destination = dest;
 	}
 
 	ThreeAddressObject(Operation oper, Operand one, Operand two, Operand dest) {
-		op = oper;
-		src1 = one;
-		src2 = two;
-		destination = dest;
+		this.op = oper;
+		this.src1 = one;
+		this.src2 = two;
+		this.destination = dest;
 	}
 
 	public String toString() {
