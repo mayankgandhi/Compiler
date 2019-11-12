@@ -153,6 +153,24 @@ public class AssemblyC {
 				cCode += "r3 = r1 + r2;\n";
 				cCode += offset_dest + " = r3;\n";
 				break;
+			case MINUS:
+				cCode += "r1 = " + offset_src1 + ";\n";
+				cCode += "r2 = " + offset_src2 + ";\n";
+				cCode += "r3 = r1 - r2;\n";
+				cCode += offset_dest + " = r3;\n";
+				break;
+			case MUL:
+				cCode += "r1 = " + offset_src1 + ";\n";
+				cCode += "r2 = " + offset_src2 + ";\n";
+				cCode += "r3 = r1 * r2;\n";
+				cCode += offset_dest + " = r3;\n";
+				break;
+			case DIV:
+				cCode += "r1 = " + offset_src1 + ";\n";
+				cCode += "r2 = " + offset_src2 + ";\n";
+				cCode += "r3 = r1 / r2;\n";
+				cCode += offset_dest + " = r3;\n";
+				break;
 			case ASSIGN:
 				cCode += "r1 = " + offset_src1 + ";\n";
 				cCode += offset_dest + " = r1;\n";
@@ -161,6 +179,21 @@ public class AssemblyC {
 				cCode += "r1 = " + offset_src1 + ";\n";
 				cCode += "r2 = " + offset_src2 + ";\n";
 				cCode += "if (r1 < r2) goto truelabel" + aTao.destination + ";\n";
+				break;
+			case LTE:
+				cCode += "r1 = " + offset_src1 + ";\n";
+				cCode += "r2 = " + offset_src2 + ";\n";
+				cCode += "if (r1 <= r2) goto truelabel" + aTao.destination + ";\n";
+				break;
+			case GT:
+				cCode += "r1 = " + offset_src1 + ";\n";
+				cCode += "r2 = " + offset_src2 + ";\n";
+				cCode += "if (r1 > r2) goto truelabel" + aTao.destination + ";\n";
+				break;
+			case GTE:
+				cCode += "r1 = " + offset_src1 + ";\n";
+				cCode += "r2 = " + offset_src2 + ";\n";
+				cCode += "if (r1 >= r2) goto truelabel" + aTao.destination + ";\n";
 				break;
 			case GOTO:
 				cCode += "goto falselabel" + aTao.destination + ";\n";
