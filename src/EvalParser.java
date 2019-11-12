@@ -461,7 +461,7 @@ public class EvalParser {
 			mid.right = right;
 			result = mid;
 			result.loc = mid.left.loc;
-			localTable.add(result.left.value, SymbolType.INT);
+			//localTable.add(result.left.value, SymbolType.INT);
 			nextToken = lookahead();
 			match(nextToken, TokenType.SEMICOLON);
 		}
@@ -1083,7 +1083,7 @@ public class EvalParser {
 
 	public static void main(String args[]) {
 		EvalParser parser = new EvalParser();
-		String eval = "private class test { int i; int y; void main2(){ int i; int y;} }";
+		String eval = "public class test { int z; void main(){z = 19; if(z < 12 && 3 <= 2){z = 8;}}}";
 		ASTnode root = parser.program(eval);
 		System.out.println("---------");
 		System.out.println(parser.emitTAC(root, false));

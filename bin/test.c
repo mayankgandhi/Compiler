@@ -13,33 +13,26 @@ sp = sp - 2;
 *(sp+2) = fp;
 *(sp+1) = ra;
 fp = sp;
-sp = sp - 5;
+sp = sp - 3;
 
-r1 = 6;
+r1 = 1;
 *(fp-2) = r1;
-r1 = 5;
-*(fp-3) = r1;
-r1 = *(fp-2);
-r2 = *(fp-3);
-if (r1 < r2) goto truelabel1;
-goto falselabel0;
-truelabel1:
-r1 = 2;
-*(fp-4) = r1;
-r1 = 3;
-*(fp-5) = r1;
-r1 = *(fp-4);
-r2 = *(fp-5);
-if (r1 < r2) goto truelabel0;
+r1 = *(fp-3);
+r2 = *(fp-2);
+if (r1 > r2) goto truelabel0;
 goto falselabel0;
 truelabel0:
+r1 = 0;
+*(fp-2) = r1;
+r1 = *(fp-2);
+*(fp-3) = r1;
 r1 = 5;
 *(fp-2) = r1;
 r1 = *(fp-2);
-reserved = r1;
+*(fp-1) = r1;
 falselabel0:
 
-sp = sp + 5;
+sp = sp + 3;
 fp = *(sp+2);
 ra = *(sp+1);
 sp = sp + 2;
