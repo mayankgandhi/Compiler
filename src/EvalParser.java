@@ -21,7 +21,7 @@ public class EvalParser {
 	private ArrayList<ThreeAddressObject> tacObjects = new ArrayList<ThreeAddressObject>();
 
 	public ASTnode program(String eval) {
-		localTable = globalTable;
+		//localTable = globalTable;
 		evalString = eval;
 		tempID = 0;
 		IDs.clear();

@@ -7,6 +7,7 @@ public class AssemblyC {
 	String cCode = "";
 	ArrayList<CodeGenTuple> funcTuples;
 	Table globalTable;
+	Table localTable;
 	TreeMap<String, Integer> offsets;
 
 	public AssemblyC(String newEval) {
@@ -84,6 +85,7 @@ public class AssemblyC {
 	private int setStackSize(Table localTable) {
 		int stackSize = 0;
 
+		this.localTable = localTable;
 		TreeMap<String, SymbolType> thisLocal = localTable.getTable();
 		Set<String> keys = thisLocal.keySet();
 
@@ -112,12 +114,12 @@ public class AssemblyC {
 		cCode += "\n";
 
 		for (ThreeAddressObject aTao : threeAddressList) {
-			
+
 			// This code is to differentiate between temps and actual variables.
 			String offset_src1 = "";
 			String offset_src2 = "";
 			String offset_dest = "";
-			if (aTao.src1 != null && (aTao.src1.toString().contains("temp") || (!globalTable.getTable().containsKey(aTao.src1.toString())))) {
+			if (aTao.src1 != null && !globalTable.getTable().containsKey(aTao.src1.toString())) {
 				offset_src1 = "";
 				offset_src1 = "*(fp-" + offsets.get(aTao.src1.toString()) + ")";
 			} else {
@@ -125,7 +127,7 @@ public class AssemblyC {
 					offset_src1 = aTao.src1.toString();
 			}
 
-			if (aTao.src2 != null && (aTao.src2.toString().contains("temp") || (!globalTable.getTable().containsKey(aTao.src2.toString())))) {
+			if (aTao.src2 != null && !globalTable.getTable().containsKey(aTao.src2.toString())) {
 				offset_src2 = "";
 				offset_src2 = "*(fp-" + offsets.get(aTao.src2.toString()) + ")";
 			} else {
@@ -133,8 +135,7 @@ public class AssemblyC {
 					offset_src2 = aTao.src2.toString();
 			}
 
-			if (aTao.destination != null && (aTao.destination.toString().contains("temp") 
-					|| (!globalTable.getTable().containsKey(aTao.destination.toString())))) {
+			if (aTao.destination != null && !globalTable.getTable().containsKey(aTao.destination.toString())) {
 				offset_dest = "";
 				offset_dest = "*(fp-" + offsets.get(aTao.destination.toString()) + ")";
 			} else {
@@ -204,7 +205,25 @@ public class AssemblyC {
 			case IF: // destination for IF statement should be where it goes if true
 				cCode += "falselabel" + aTao.destination.toString() + ":\n";
 				break;
+			case START_WHILE:
+				cCode += "repeatLabel" + aTao.src1.toString() + ":\n";
+				break;
+			case WHILE:
+				cCode += "goto repeatLabel" + aTao.src1.toString() + ";\n";
+				cCode += "falselabel" + aTao.destination.toString() + ":\n";
+				break;
+			case EQUALS:
+				cCode += "r1 = " + offset_src1 + ";\n";
+				cCode += "r2 = " + offset_src2 + ";\n";
+				cCode += "if (r1 == r2) goto truelabel" + aTao.destination + ";\n";
+				break;
+			case NOTEQUALS:
+				cCode += "r1 = " + offset_src1 + ";\n";
+				cCode += "r2 = " + offset_src2 + ";\n";
+				cCode += "if (r1 != r2) goto truelabel" + aTao.destination + ";\n";
+				break;
 			}
+			
 		}
 
 		cCode += "\n";
