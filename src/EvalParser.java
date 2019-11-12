@@ -384,7 +384,7 @@ public class EvalParser {
 						"ERROR: Function or variable \'" + nextToken.tokenVal + "\' already defined");
 			}
 		} else {
-			if (localTable.findLocally(nextToken) == null && globalTable.findLocally(nextToken) == null) {
+			if (localTable.findLocally(nextToken) == null) {
 				localTable.add(nextToken.tokenVal, SymbolType.INT);
 			} else {
 				throw new CompilerException(
@@ -1083,7 +1083,7 @@ public class EvalParser {
 
 	public static void main(String args[]) {
 		EvalParser parser = new EvalParser();
-		String eval = "private class test { int i; int y; void main2(){ } }";
+		String eval = "private class test { int i; int y; void main2(){ int i; int y;} }";
 		ASTnode root = parser.program(eval);
 		System.out.println("---------");
 		System.out.println(parser.emitTAC(root, false));
