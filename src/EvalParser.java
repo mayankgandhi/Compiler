@@ -21,7 +21,7 @@ public class EvalParser {
 	private ArrayList<ThreeAddressObject> tacObjects = new ArrayList<ThreeAddressObject>();
 
 	public ASTnode program(String eval) {
-		localTable = globalTable;
+		// localTable = globalTable;
 		evalString = eval;
 		tempID = 0;
 		IDs.clear();
@@ -1088,5 +1088,6 @@ public class EvalParser {
 		System.out.println("---------");
 		System.out.println(parser.emitTAC(root, false));
 		parser.localTable.printWholeTable();
+		parser.globalTable.printWholeTable();
 	}
 }
