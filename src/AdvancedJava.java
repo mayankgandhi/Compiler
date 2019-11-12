@@ -6,12 +6,12 @@ import java.io.IOException;
 public class AdvancedJava {
 
 	public void codeGen(String eval, String fileName){
-        File file = new File("./" + fileName);
+        File file = new File(fileName);
         BufferedWriter writer = null;
-        fileName = "./src/" + fileName;
         AssemblyC assembler = new AssemblyC(eval);
         String code = assembler.assembleCcode();
-        System.out.println(code);
+        //assembler.localTable.printWholeTable();
+        //System.out.println(code);
         try {
             writer = new BufferedWriter(new FileWriter(fileName));
             writer.write(code);
