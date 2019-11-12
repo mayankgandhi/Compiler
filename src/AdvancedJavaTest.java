@@ -20,7 +20,7 @@ public class AdvancedJavaTest{
     System.out.println("*******************************************");
     System.out.println("Testing Three Address Generation");
 
-    String eval = "public class test { int x; int y; int reserved; void mainEntry() { if ( x > 1 ) {int x = 0; int reserved = 5;} } }";
+    String eval = "public class test { int x; int y; int reserved; void mainEntry() { reserved = 3; if ( x != 2 ) { int reserved = 5 * x;} } }";
     AdvancedJava parser = new AdvancedJava();
     String fileName = "test.c";
     parser.codeGen(eval, fileName);

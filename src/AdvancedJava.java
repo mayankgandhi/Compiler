@@ -11,8 +11,8 @@ public class AdvancedJava {
         fileName = "./src/" + fileName;
         AssemblyC assembler = new AssemblyC(eval);
         String code = assembler.assembleCcode();
-        assembler.localTable.printWholeTable();
-        System.out.println(code);
+        //assembler.localTable.printWholeTable();
+        //System.out.println(code);
         try {
             writer = new BufferedWriter(new FileWriter(fileName));
             writer.write(code);

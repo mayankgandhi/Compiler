@@ -15,20 +15,24 @@ sp = sp - 2;
 fp = sp;
 sp = sp - 3;
 
-r1 = 1;
-*(fp-2) = r1;
-r1 = *(fp-3);
-r2 = *(fp-2);
-if (r1 > r2) goto truelabel0;
-goto falselabel0;
-truelabel0:
-r1 = 0;
+r1 = 3;
 *(fp-2) = r1;
 r1 = *(fp-2);
-*(fp-3) = r1;
+*(fp-1) = r1;
+r1 = 2;
+*(fp-2) = r1;
+r1 = x;
+r2 = *(fp-2);
+if (r1 != r2) goto truelabel0;
+goto falselabel0;
+truelabel0:
 r1 = 5;
 *(fp-2) = r1;
 r1 = *(fp-2);
+r2 = x;
+r3 = r1 * r2;
+*(fp-3) = r3;
+r1 = *(fp-3);
 *(fp-1) = r1;
 falselabel0:
 
