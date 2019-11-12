@@ -9,20 +9,20 @@ public class EvalParser {
 	ASTnode root = new ASTnode(TokenType.PROGRAM);
 	private int parenCounter = 0;
 	boolean expressionInside;
-	ArrayList<ThreeAddressObject> threeAddressObjects = new ArrayList<>();
+	public ArrayList<ThreeAddressObject> threeAddressObjects = new ArrayList<>();
 	int tlabelID = 0; // Label id for true
 	int flabelID = 0; // Label id for false
 	int rlabelID = 0; // Label id for loops
 	private String threeAddress = "";
 
 	private Table localTable;
-	private Table globalTable = new Table();
-	private ArrayList<CodeGenTuple> funcTuples = new ArrayList<CodeGenTuple>();
+	Table globalTable = new Table();
+	public ArrayList<CodeGenTuple> funcTuples = new ArrayList<CodeGenTuple>();
 	private ArrayList<ThreeAddressObject> tacObjects = new ArrayList<ThreeAddressObject>();
 
 	public ASTnode program(String eval) {
 		localTable = globalTable;
-		threeAddressResult = "";
+		threeAddressResult = 
 		evalString = eval;
 		tempID = 0;
 		IDs.clear();
