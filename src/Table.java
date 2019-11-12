@@ -19,13 +19,10 @@ public class Table {
 
     public void add(String key, SymbolType sym) {
         table.put(key, sym);
-
-        // changed tino
-        // printWholeTable();
     }
 
     // changed tino
-    public void printWholeTable() {
+    public void printTable() {
         System.out.println("====================================");
         Table newTable = this;
         while (newTable != null) {

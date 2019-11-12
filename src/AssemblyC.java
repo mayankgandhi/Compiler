@@ -110,39 +110,39 @@ public class AssemblyC {
 	private void writeAssembly(ArrayList<ThreeAddressObject> threeAddressList) {
 		cCode += "\n";
 
-		for (ThreeAddressObject aTao : threeAddressList) {
+		for (ThreeAddressObject TAO : threeAddressList) {
 
 			// This code is to differentiate between temps and actual variables.
 			String offset_src1 = "";
 			String offset_src2 = "";
 			String offset_dest = "";
-			if (aTao.src1 != null && localTable.getTable().containsKey(aTao.src1.toString())) {
+			if (TAO.src1 != null && localTable.getTable().containsKey(TAO.src1.toString())) {
 				offset_src1 = "";
-				offset_src1 = "*(fp-" + offsets.get(aTao.src1.toString()) + ")";
+				offset_src1 = "*(fp-" + offsets.get(TAO.src1.toString()) + ")";
 			} else {
-				if (aTao.src1 != null)
-					offset_src1 = aTao.src1.toString();
+				if (TAO.src1 != null)
+					offset_src1 = TAO.src1.toString();
 			}
 
-			if (aTao.src2 != null && localTable.getTable().containsKey(aTao.src2.toString())) {
+			if (TAO.src2 != null && localTable.getTable().containsKey(TAO.src2.toString())) {
 				offset_src2 = "";
-				offset_src2 = "*(fp-" + offsets.get(aTao.src2.toString()) + ")";
+				offset_src2 = "*(fp-" + offsets.get(TAO.src2.toString()) + ")";
 			} else {
-				if (aTao.src2 != null)
-					offset_src2 = aTao.src2.toString();
+				if (TAO.src2 != null)
+					offset_src2 = TAO.src2.toString();
 			}
 
-			if (aTao.destination != null && localTable.getTable().containsKey(aTao.destination.toString())) {
+			if (TAO.destination != null && localTable.getTable().containsKey(TAO.destination.toString())) {
 				offset_dest = "";
-				offset_dest = "*(fp-" + offsets.get(aTao.destination.toString()) + ")";
+				offset_dest = "*(fp-" + offsets.get(TAO.destination.toString()) + ")";
 			} else {
-				if (aTao.destination != null)
-					offset_dest = aTao.destination.toString();
+				if (TAO.destination != null)
+					offset_dest = TAO.destination.toString();
 			}
 
-			switch (aTao.op) {
+			switch (TAO.op) {
 			case NUM:
-				cCode += "r1 = " + aTao.src1 + ";\n";
+				cCode += "r1 = " + TAO.src1 + ";\n";
 				cCode += offset_dest + " = r1;\n";
 				break;
 			case PLUS:
@@ -176,53 +176,52 @@ public class AssemblyC {
 			case LT:
 				cCode += "r1 = " + offset_src1 + ";\n";
 				cCode += "r2 = " + offset_src2 + ";\n";
-				cCode += "if (r1 < r2) goto truelabel" + aTao.destination + ";\n";
+				cCode += "if (r1 < r2) goto truelabel" + TAO.destination + ";\n";
 				break;
 			case LTE:
 				cCode += "r1 = " + offset_src1 + ";\n";
 				cCode += "r2 = " + offset_src2 + ";\n";
-				cCode += "if (r1 <= r2) goto truelabel" + aTao.destination + ";\n";
+				cCode += "if (r1 <= r2) goto truelabel" + TAO.destination + ";\n";
 				break;
 			case GT:
 				cCode += "r1 = " + offset_src1 + ";\n";
 				cCode += "r2 = " + offset_src2 + ";\n";
-				cCode += "if (r1 > r2) goto truelabel" + aTao.destination + ";\n";
+				cCode += "if (r1 > r2) goto truelabel" + TAO.destination + ";\n";
 				break;
 			case GTE:
 				cCode += "r1 = " + offset_src1 + ";\n";
 				cCode += "r2 = " + offset_src2 + ";\n";
-				cCode += "if (r1 >= r2) goto truelabel" + aTao.destination + ";\n";
+				cCode += "if (r1 >= r2) goto truelabel" + TAO.destination + ";\n";
 				break;
 			case GOTO:
-				cCode += "goto falselabel" + aTao.destination + ";\n";
+				cCode += "goto falselabel" + TAO.destination + ";\n";
 				break;
 			case LABEL:
-				cCode += aTao.src1 + ":\n";
+				cCode += TAO.src1 + ":\n";
 				break;
 			case IF: // destination for IF statement should be where it goes if true
-				cCode += "falselabel" + aTao.destination.toString() + ":\n";
+				cCode += "falselabel" + TAO.destination.toString() + ":\n";
 				break;
 			case START_WHILE:
-				cCode += "repeatLabel" + aTao.src1.toString() + ":\n";
+				cCode += "repeatLabel" + TAO.src1.toString() + ":\n";
 				break;
 			case WHILE:
-				cCode += "goto repeatLabel" + aTao.src1.toString() + ";\n";
-				cCode += "falselabel" + aTao.destination.toString() + ":\n";
+				cCode += "goto repeatLabel" + TAO.src1.toString() + ";\n";
+				cCode += "falselabel" + TAO.destination.toString() + ":\n";
 				break;
 			case EQUALS:
 				cCode += "r1 = " + offset_src1 + ";\n";
 				cCode += "r2 = " + offset_src2 + ";\n";
-				cCode += "if (r1 == r2) goto truelabel" + aTao.destination + ";\n";
+				cCode += "if (r1 == r2) goto truelabel" + TAO.destination + ";\n";
 				break;
 			case NOTEQUALS:
 				cCode += "r1 = " + offset_src1 + ";\n";
 				cCode += "r2 = " + offset_src2 + ";\n";
-				cCode += "if (r1 != r2) goto truelabel" + aTao.destination + ";\n";
+				cCode += "if (r1 != r2) goto truelabel" + TAO.destination + ";\n";
 				break;
 			}
 			
 		}
-
 		cCode += "\n";
 	}
 

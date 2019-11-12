@@ -1,8 +1,8 @@
 import java.util.ArrayList;
 
 public class EvalParser {
-	Scanner scan = new Scanner();
-	String evalString;
+	Scanner scan = new Scanner(); // SCANNER object
+	String evalString; // the string that's being parsed
 	int tempID = 0;
 	String threeAddressResult = "";
 	ArrayList<Integer> IDs = new ArrayList<Integer>();
@@ -438,7 +438,7 @@ public class EvalParser {
 			mid.right = right;
 			result = mid;
 			result.loc = mid.left.loc;
-			localTable.add(result.left.value, SymbolType.INT );
+			localTable.add(result.left.value, SymbolType.INT);
 			nextToken = lookahead();
 			match(nextToken, TokenType.SEMICOLON);
 		} else if (nextToken != null && nextToken.tokenType == TokenType.ID) {
@@ -447,7 +447,7 @@ public class EvalParser {
 
 			// changed tino
 			///////////////////////////
-			if (localTable.find(nextToken) == null && globalTable.find(nextToken)==null) {
+			if (localTable.find(nextToken) == null && globalTable.find(nextToken) == null) {
 				System.out.println("ERROR: variable \'" + nextToken.tokenVal + "\' not defined");
 				System.exit(1);
 			}
@@ -461,7 +461,7 @@ public class EvalParser {
 			mid.right = right;
 			result = mid;
 			result.loc = mid.left.loc;
-			//localTable.add(result.left.value, SymbolType.INT);
+			// localTable.add(result.left.value, SymbolType.INT);
 			nextToken = lookahead();
 			match(nextToken, TokenType.SEMICOLON);
 		}
@@ -604,8 +604,8 @@ public class EvalParser {
 				ASTnode right = E();
 				mid.left = result;
 				mid.right = right;
-				localTable.add("temp"+mid.left.loc, SymbolType.INT );
-				localTable.add("temp"+mid.right.loc, SymbolType.INT );
+				localTable.add("temp" + mid.left.loc, SymbolType.INT);
+				localTable.add("temp" + mid.right.loc, SymbolType.INT);
 				result = mid;
 				result.fLoc = flabelID++;
 				result.tLoc = tlabelID++;
@@ -615,8 +615,8 @@ public class EvalParser {
 				ASTnode right = E();
 				mid.left = result;
 				mid.right = right;
-				localTable.add("temp"+mid.left.loc, SymbolType.INT );
-				localTable.add("temp"+mid.right.loc, SymbolType.INT );
+				localTable.add("temp" + mid.left.loc, SymbolType.INT);
+				localTable.add("temp" + mid.right.loc, SymbolType.INT);
 				result = mid;
 				result.fLoc = flabelID++;
 				result.tLoc = tlabelID++;
@@ -626,8 +626,8 @@ public class EvalParser {
 				ASTnode right = E();
 				mid.left = result;
 				mid.right = right;
-				localTable.add("temp"+mid.left.loc, SymbolType.INT );
-				localTable.add("temp"+mid.right.loc, SymbolType.INT );
+				localTable.add("temp" + mid.left.loc, SymbolType.INT);
+				localTable.add("temp" + mid.right.loc, SymbolType.INT);
 				result = mid;
 				result.fLoc = flabelID++;
 				result.tLoc = tlabelID++;
@@ -637,8 +637,8 @@ public class EvalParser {
 				ASTnode right = E();
 				mid.left = result;
 				mid.right = right;
-				localTable.add("temp"+mid.left.loc, SymbolType.INT );
-				localTable.add("temp"+mid.right.loc, SymbolType.INT );
+				localTable.add("temp" + mid.left.loc, SymbolType.INT);
+				localTable.add("temp" + mid.right.loc, SymbolType.INT);
 				result = mid;
 				result.fLoc = flabelID++;
 				result.tLoc = tlabelID++;
@@ -657,11 +657,11 @@ public class EvalParser {
 				ASTnode right = T();
 				mid.left = result;
 				mid.right = right;
-				localTable.add("temp"+mid.left.loc, SymbolType.INT );
-				localTable.add("temp"+mid.right.loc, SymbolType.INT );
+				localTable.add("temp" + mid.left.loc, SymbolType.INT);
+				localTable.add("temp" + mid.right.loc, SymbolType.INT);
 				result = mid;
 				result.loc = tempID++;
-				localTable.add("temp"+result.loc, SymbolType.INT );
+				localTable.add("temp" + result.loc, SymbolType.INT);
 
 			} else if (nextToken.tokenType == TokenType.MINUS) {
 				match(nextToken, TokenType.MINUS);
@@ -669,11 +669,11 @@ public class EvalParser {
 				ASTnode right = T();
 				mid.left = result;
 				mid.right = right;
-				localTable.add("temp"+mid.left.loc, SymbolType.INT );
-				localTable.add("temp"+mid.right.loc, SymbolType.INT );
+				localTable.add("temp" + mid.left.loc, SymbolType.INT);
+				localTable.add("temp" + mid.right.loc, SymbolType.INT);
 				result = mid;
 				result.loc = tempID++;
-				localTable.add("temp"+result.loc, SymbolType.INT );
+				localTable.add("temp" + result.loc, SymbolType.INT);
 			}
 		}
 		return result;
@@ -689,22 +689,22 @@ public class EvalParser {
 				ASTnode right = F();
 				mid.left = result;
 				mid.right = right;
-				localTable.add("temp"+mid.left.loc, SymbolType.INT );
-				localTable.add("temp"+mid.right.loc, SymbolType.INT );
+				localTable.add("temp" + mid.left.loc, SymbolType.INT);
+				localTable.add("temp" + mid.right.loc, SymbolType.INT);
 				result = mid;
 				result.loc = tempID++;
-				localTable.add("temp"+result.loc, SymbolType.INT );
+				localTable.add("temp" + result.loc, SymbolType.INT);
 			} else if (nextToken.tokenType == TokenType.DIV) {
 				match(nextToken, TokenType.DIV);
 				ASTnode mid = new ASTnode(TokenType.DIV);
 				ASTnode right = F();
 				mid.left = result;
 				mid.right = right;
-				localTable.add("temp"+mid.left.loc, SymbolType.INT );
-				localTable.add("temp"+mid.right.loc, SymbolType.INT );
+				localTable.add("temp" + mid.left.loc, SymbolType.INT);
+				localTable.add("temp" + mid.right.loc, SymbolType.INT);
 				result = mid;
 				result.loc = tempID++;
-				localTable.add("temp"+result.loc, SymbolType.INT );
+				localTable.add("temp" + result.loc, SymbolType.INT);
 			}
 		}
 		return result;
@@ -732,15 +732,13 @@ public class EvalParser {
 				match(nextToken, TokenType.NUM);
 				expressionInside = true;
 				aNode = new ASTnode(TokenType.NUM, nextToken.tokenVal);
-				localTable.add("temp"+aNode.loc,SymbolType.INT);
+				localTable.add("temp" + aNode.loc, SymbolType.INT);
 				aNode.loc = tempID++;
 				return aNode;
 			} else if (nextToken != null && nextToken.tokenType == TokenType.ID) {
 				match(nextToken, TokenType.ID);
 				aNode = new ASTnode(TokenType.ID, nextToken.tokenVal);
-				if(localTable.find(nextToken)==null && 
-				globalTable.find(nextToken)==null)
-				{
+				if (localTable.find(nextToken) == null && globalTable.find(nextToken) == null) {
 					System.out.println("undefined variable");
 				}
 				return aNode;
@@ -1083,11 +1081,9 @@ public class EvalParser {
 
 	public static void main(String args[]) {
 		EvalParser parser = new EvalParser();
-		String eval = "public class test { int z; void main(){z = 19; if(z < 12 && 3 <= 2){z = 8;}}}";
+		String eval = "public class test { int x; int y; int reserved; void mainEntry() { reserved = 0; if(4 <= 3) {reserved = 42;}} }";
 		ASTnode root = parser.program(eval);
 		System.out.println("---------");
 		System.out.println(parser.emitTAC(root, false));
-		parser.localTable.printWholeTable();
-		parser.globalTable.printWholeTable();
 	}
 }
