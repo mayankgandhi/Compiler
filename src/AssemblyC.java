@@ -7,6 +7,7 @@ public class AssemblyC {
 	String cCode = "";
 	ArrayList<CodeGenTuple> funcTuples;
 	Table globalTable;
+	TreeMap<String, Integer> offsets;
 
 	public AssemblyC(String newEval) {
 		eval = newEval;
@@ -19,14 +20,14 @@ public class AssemblyC {
 	public String assembleCcode() {
 		cCode = "";
 		addHeader();
-		
+
 		addFunctions();
-		
+
 		addFooter();
-		
+
 		return cCode;
 	}
-	
+
 	private void addHeader() {
 		cCode += "#include <stdio.h>\n";
 		cCode += "#include <inttypes.h>\n";
@@ -43,160 +44,140 @@ public class AssemblyC {
 	private void addGlobals() {
 		TreeMap<String, SymbolType> thisGlobal = globalTable.getTable();
 		Set<String> keys = thisGlobal.keySet();
-		
+
 		// if not globals
 		if (keys.size() == 0)
 			return;
-		
+
 		boolean firstGlobal = true;
 		cCode += "int64_t ";
-		for (String key: keys) {
+		for (String key : keys) {
 			if (firstGlobal == false)
 				cCode += ", ";
-			
+
 			if (thisGlobal.get(key) == SymbolType.INT) {
 				cCode += key + " = 0";
 				firstGlobal = false;
 			}
-			
+
 		}
 		cCode += ";\n";
 	}
-	
+
 	private void addFunctions() {
 //		cCode += "===============TEST CODE ==============\n";
-		for(int i = 0; i < funcTuples.size(); i++) {
+		for (int i = 0; i < funcTuples.size(); i++) {
+			offsets = new TreeMap<String, Integer>();
 			CodeGenTuple funcTuple = funcTuples.get(i);
 			cCode += funcTuple.getFuncName() + ":\n";
 			// TO DO, Change real stack size
 			int stackSize = setStackSize(funcTuple.getLocalTable());
-			stackSize = 2;
+			System.out.println("Stack:" + stackSize);
 			growStack(stackSize);
 			writeAssembly(funcTuple.getThreeAddressList());
 			CleanUp(stackSize);
-			
+
 		}
-		//cCode += "===============TEST CODE ==============\n";
+		// cCode += "===============TEST CODE ==============\n";
 	}
-	
+
 	private int setStackSize(Table localTable) {
 		int stackSize = 0;
-		
+
 		TreeMap<String, SymbolType> thisLocal = localTable.getTable();
 		Set<String> keys = thisLocal.keySet();
-		
-		for (String key : keys ) {
+
+		int offset = 1;
+		for (String key : keys) {
+
 			if (thisLocal.get(key) == SymbolType.INT) {
+				offsets.put(key, offset);
 				stackSize += 1;
+				offset++;
 			}
 		}
 		return stackSize;
 	}
 
 	private void growStack(int stackSize) {
-		
+
 		cCode += "sp = sp - 2;\n";
 		cCode += "*(sp+2) = fp;\n";
 		cCode += "*(sp+1) = ra;\n";
 		cCode += "fp = sp;\n";
 		cCode += "sp = sp - " + stackSize + ";\n";
 	}
-	
+
 	private void writeAssembly(ArrayList<ThreeAddressObject> threeAddressList) {
 		cCode += "\n";
-		
+
 		for (ThreeAddressObject aTao : threeAddressList) {
-//			int src1off = 0;
-//			int src2off = 0;
-//			int srcDESoff = 0;
-//			
-//			if (aTao.src1 != null && aTao.src1.toString().equals("temp0")) {
-//				src1off = 1;
-//			}
-//			else {
-//				src1off = 2;
-//			}
-//			
-//			if (aTao.src2 != null && aTao.src2.toString().equals("temp0")) {
-//				src2off = 1;
-//			}
-//			else {
-//				src2off = 2;
-//			}
-//			
-//			if (aTao.destination != null && aTao.destination.toString().equals("temp0")) {
-//				srcDESoff = 1;
-//			}
-//			else {
-//				srcDESoff = 2;
-//			}
-//			
-//			
-//			switch(aTao.op) {
-//			case NUM:
-//				cCode += "r1 = " + aTao.src1 + ";\n";
-//				if (aTao.destination.toString().contains("temp"))
-//					cCode += "*(fp-" + srcDESoff + ") = r1;\n";
-//				else
-//					cCode += aTao.destination + "= r1;\n";
-//				break;
-//			case PLUS:
-//				cCode += "r1 = *(fp-" + (src1off) + ");\n";
-//				cCode += "r2 = *(fp-" + (src2off) + ");\n";
-//				cCode += "r3 = r1 + r2;\n";
-//				cCode += "*(fp-" + srcDESoff + ") = r3;\n";
-//				
-//				break;
-//			case ASSIGN:
-//				cCode += "r1 = *(fp-" + (src1off) + ");\n";
-//				if (aTao.destination.toString().contains("temp"))
-//					cCode += "*(fp-" + srcDESoff + ") = r1;\n";
-//				else
-//					cCode += aTao.destination + "= r1;\n";
-//				break;
-//			case LT:
-//				cCode += "r1 = *(fp-" + (src1off) + ");\n";
-//				cCode += "r2 = *(fp-" + src2off + ");\n";
-//				cCode += "if (r1 < r2) goto truelabel" + aTao.destination + ";\n";
-//				break;
-//			case GOTO:
-//				cCode += "goto falselabel" + aTao.destination + ";\n";
-//			case LABEL:
-//				cCode += aTao.src1 + ":\n";
-//			}
-			switch(aTao.op) {
+			
+			// This code is to differentiate between temps and actual variables.
+			String offset_src1 = "";
+			String offset_src2 = "";
+			String offset_dest = "";
+			if (aTao.src1 != null && (aTao.src1.toString().contains("temp") || (!globalTable.getTable().containsKey(aTao.src1.toString())))) {
+				offset_src1 = "";
+				offset_src1 = "*(fp-" + offsets.get(aTao.src1.toString()) + ")";
+			} else {
+				if (aTao.src1 != null)
+					offset_src1 = aTao.src1.toString();
+			}
+
+			if (aTao.src2 != null && (aTao.src2.toString().contains("temp") || (!globalTable.getTable().containsKey(aTao.src2.toString())))) {
+				offset_src2 = "";
+				offset_src2 = "*(fp-" + offsets.get(aTao.src2.toString()) + ")";
+			} else {
+				if (aTao.src2 != null)
+					offset_src2 = aTao.src2.toString();
+			}
+
+			if (aTao.destination != null && (aTao.destination.toString().contains("temp") 
+					|| (!globalTable.getTable().containsKey(aTao.destination.toString())))) {
+				offset_dest = "";
+				offset_dest = "*(fp-" + offsets.get(aTao.destination.toString()) + ")";
+			} else {
+				if (aTao.destination != null)
+					offset_dest = aTao.destination.toString();
+			}
+
+			switch (aTao.op) {
 			case NUM:
 				cCode += "r1 = " + aTao.src1 + ";\n";
-				cCode += "*(fp-" + (aTao.destination + ".offset") + " ) = r1;\n";
+				cCode += offset_dest + " = r1;\n";
 				break;
 			case PLUS:
-				cCode += "r1 = " + (aTao.src1 + ".offset") + ";\n";
-				cCode += "r2 = " + (aTao.src2 + ".offset") + ";\n";
+				cCode += "r1 = " + offset_src1 + ";\n";
+				cCode += "r2 = " + offset_src2 + ";\n";
 				cCode += "r3 = r1 + r2;\n";
-				cCode += "*(" + (aTao.destination + ".offset") + ") = r3;\n";
+				cCode += offset_dest + " = r3;\n";
 				break;
 			case ASSIGN:
-				cCode += "r1 = (" + (aTao.src1 + ".offset") + ");\n";
-				cCode += "*(fp-" + (aTao.destination + ".offset") + ") = r1;\n";
+				cCode += "r1 = " + offset_src1 + ";\n";
+				cCode += offset_dest + " = r1;\n";
 				break;
 			case LT:
-				cCode += "r1 = *(" + (aTao.src1 + ".offset") + ");\n";
-				cCode += "r2 = *(" + (aTao.src2 + ".offset") + ");\n";
+				cCode += "r1 = " + offset_src1 + ";\n";
+				cCode += "r2 = " + offset_src2 + ";\n";
 				cCode += "if (r1 < r2) goto truelabel" + aTao.destination + ";\n";
 				break;
 			case GOTO:
 				cCode += "goto falselabel" + aTao.destination + ";\n";
+				break;
 			case LABEL:
 				cCode += aTao.src1 + ":\n";
+				break;
+			case IF: // destination for IF statement should be where it goes if true
+				cCode += "falselabel" + aTao.destination.toString() + ":\n";
+				break;
 			}
 		}
-		
-		
+
 		cCode += "\n";
 	}
-	
+
 	private void CleanUp(int stackSize) {
-		cCode += "falselabel0:\n";
 		cCode += "sp = sp + " + stackSize + ";\n";
 		cCode += "fp = *(sp+2);\n";
 		cCode += "ra = *(sp+1);\n";
