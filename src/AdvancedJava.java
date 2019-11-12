@@ -6,9 +6,8 @@ import java.io.IOException;
 public class AdvancedJava {
 
 	public void codeGen(String eval, String fileName){
-        File file = new File("./" + fileName);
+        File file = new File(fileName);
         BufferedWriter writer = null;
-        fileName = "./src/" + fileName;
         AssemblyC assembler = new AssemblyC(eval);
         String code = assembler.assembleCcode();
         //assembler.localTable.printWholeTable();

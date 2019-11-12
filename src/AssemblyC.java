@@ -237,7 +237,7 @@ public class AssemblyC {
 	private void addFooter() {
 
 		cCode += "exit:\n";
-		cCode += "printf(\"%d\\n\", reserved);\n";
+		//cCode += "printf(\"%d\\n\", reserved);\n";
 		cCode += "return reserved;\n";
 		cCode += "}";
 	}
