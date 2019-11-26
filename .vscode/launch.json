@@ -2,6 +2,20 @@
     "configurations": [
         {
             "type": "java",
+            "name": "CodeLens (Launch) - Tester",
+            "request": "launch",
+            "mainClass": "Tester",
+            "projectName": "COMPILER"
+        },
+        {
+            "type": "java",
+            "name": "CodeLens (Launch) - FinalTestNoGCC",
+            "request": "launch",
+            "mainClass": "FinalTestNoGCC",
+            "projectName": "COMPILER"
+        },
+        {
+            "type": "java",
             "name": "CodeLens (Launch) - AdvancedJava",
             "request": "launch",
             "mainClass": "AdvancedJava",

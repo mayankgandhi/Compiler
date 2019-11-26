@@ -90,9 +90,65 @@ public class EvalParser {
 		return result;
 	}
 
+	private void ret_type() throws Exception
+    {
+        Token nextToken = lookahead();
+
+        if( nextToken.tokenType == TokenType.VOID )
+        {
+            match( nextToken, TokenType.VOID );
+        }
+        else
+        {
+            match( nextToken, TokenType.INT );
+        }
+    }
+
+    private ASTnode ret() throws Exception
+    {
+        Token nextToken = lookahead();
+        match( nextToken, TokenType.RETURN );
+        ASTnode result = boolCompare();
+
+        if( result == null )
+        {
+            return null;
+        }
+
+        nextToken = lookahead();
+        match( nextToken,TokenType.SEMICOLON );
+        return result;
+	}
+	
+	private ASTnode arg() throws Exception
+    {
+        return boolCompare();
+    }
+
+    private ASTnode arg_list() throws Exception
+    {
+        Token nextToken = lookahead();
+
+        if( nextToken.tokenType != TokenType.COMMA )
+        {
+            return null;
+        }
+
+        match( nextToken, TokenType.COMMA );
+        ASTnode result = new ASTnode();
+        ASTnode arg = arg();
+        while ( arg != null )
+        {
+            result.stmts.add( arg );
+            arg = arg();
+        }
+        return result;
+    }
+
 	private ASTnode func() throws Exception {
 		Token nextToken = lookahead();
-		match(nextToken, TokenType.VOID);
+		ret_type();
+
 		nextToken = lookahead();
 		match(nextToken, TokenType.ID);
 		String funcName = nextToken.tokenVal;
@@ -109,11 +165,16 @@ public class EvalParser {
 		nextToken = lookahead();
 		match(nextToken, TokenType.LEFTPAREN);
 		nextToken = lookahead();
+		ASTnode result = param_list();
+        ASTnode mid = new ASTnode();
+        nextToken = lookahead();
 		match(nextToken, TokenType.RIGHTPAREN);
 		nextToken = lookahead();
 		match(nextToken, TokenType.LEFTCURLY);
-		ASTnode result = stmt_list();
-
+		ASTnode right = stmt_list();
+        mid.left = result;
+        mid.right = right;
+        result = mid;
 		generateTACForFunc(result, false);
 		ArrayList<ThreeAddressObject> newObjects = new ArrayList<ThreeAddressObject>();
 		for (ThreeAddressObject t : tacObjects) {
@@ -128,6 +189,8 @@ public class EvalParser {
 		match(nextToken, TokenType.RIGHTCURLY);
 		return result;
 	}
+
+
 
 	private void generateTACForFunc(ASTnode aNode, boolean isOR) {
 
@@ -395,6 +458,49 @@ public class EvalParser {
 		return aNode;
 	}
 
+	private ASTnode param() throws Exception
+    {
+        Token nextToken = lookahead();
+        if( nextToken.tokenType == TokenType.INT )
+        {
+            match( nextToken, TokenType.INT );
+            nextToken = lookahead();
+            if( nextToken.tokenType == TokenType.ID )
+            {
+                match( nextToken,TokenType.ID );
+                localTable.add( nextToken.tokenVal ,SymbolType.INT);
+                return new ASTnode( TokenType.ID, nextToken.tokenVal );
+            }
+        }
+
+        return null;
+    }
+
+    private ASTnode param_list( ) throws Exception
+    {
+        Token nextToken = lookahead();
+        ASTnode aNode = param();
+        nextToken = lookahead();
+        if( nextToken.tokenType != TokenType.COMMA )
+        {
+            return aNode;
+        }
+        ASTnode par = aNode;
+        ASTnode result = new ASTnode();
+        while (par != null)
+        {
+            result.stmts.add(par);
+            nextToken = lookahead();
+            if( nextToken.tokenType != TokenType.COMMA )
+            {
+                break;
+            }
+            match( nextToken,TokenType.COMMA );
+            par = param();
+        }
+        return result;
+    }
+
 	private ASTnode stmt_list() throws Exception {
 		ASTnode result = new ASTnode();
 		ASTnode stmt = stmt();
@@ -444,16 +550,13 @@ public class EvalParser {
 		} else if (nextToken != null && nextToken.tokenType == TokenType.ID) {
 			match(nextToken, TokenType.ID);
 			result = new ASTnode(TokenType.ID, nextToken.tokenVal);
-
-			// changed tino
-			///////////////////////////
 			if (localTable.find(nextToken) == null && globalTable.find(nextToken) == null) {
 				System.out.println("ERROR: variable \'" + nextToken.tokenVal + "\' not defined");
 				System.exit(1);
 			}
-
-			///////////////////////////
 			nextToken = lookahead();
+			//CHANGES
+			System.out.println("HERE");
 			match(nextToken, TokenType.ASSIGN);
 			ASTnode mid = new ASTnode(TokenType.ASSIGN);
 			ASTnode right = E();
@@ -736,13 +839,27 @@ public class EvalParser {
 				aNode.loc = tempID++;
 				return aNode;
 			} else if (nextToken != null && nextToken.tokenType == TokenType.ID) {
-				match(nextToken, TokenType.ID);
-				aNode = new ASTnode(TokenType.ID, nextToken.tokenVal);
-				if (localTable.find(nextToken) == null && globalTable.find(nextToken) == null) {
-					System.out.println("undefined variable");
-				}
-				return aNode;
+				match( nextToken, TokenType.ID );
+                if( localTable.find( nextToken ) == null )
+                {
+                    if ( globalTable.find( nextToken ) == null )
+                    {
+                        System.out.println( "ERROR: Undefined variable: \'" + nextToken.tokenVal + "\'" );
+                    }
+                }
+                aNode = new ASTnode( TokenType.ID, nextToken.tokenVal );
+                nextToken = lookahead();
+                if( nextToken.tokenType == TokenType.LEFTPAREN )
+                {
+                    match( nextToken, TokenType.LEFTPAREN );
+                    nextToken = lookahead();
+                    ASTnode a = arg_list();
+                    match( nextToken, TokenType.RIGHTPAREN );
+                    aNode = new ASTnode( TokenType.ID, nextToken.tokenVal );
+                }
+                return aNode;
 			}
+
 			if (parenCounter != 0) {
 				throw new CompilerException("Parenthesis count wrong");
 			}
@@ -1081,7 +1198,7 @@ public class EvalParser {
 
 	public static void main(String args[]) {
 		EvalParser parser = new EvalParser();
-		String eval = "public class test { int x; int y; int reserved; void mainEntry() { reserved = 0; if(4 <= 3) {reserved = 42;}} }";
+		String eval = "public class test { int x; int y; int reserved; void mainEntry( int gh ) { reserved = 0; if(4 <= 3) {reserved = 42; }} }";
 		ASTnode root = parser.program(eval);
 		System.out.println("---------");
 		System.out.println(parser.emitTAC(root, false));

@@ -195,7 +195,7 @@ public class Scanner {
 
     public static void main(String args[])
     {
-        String eval = "private class test { int z ; void main2 ( int x, int y ) { z = 14 ; return x; } ";
+        String eval = "private class test { int z ; void main2 ( int x, int y ) { z = 14 ; return } ";
         Scanner ob = new Scanner();
         System.out.println(ob.extractTokens(eval));
     }

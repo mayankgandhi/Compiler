@@ -6,6 +6,8 @@ public class Symbol {
 	public Symbol(SymbolType newType) {
 		this.type = newType;
 	}
+	public Symbol() {
+	}
 	public void setType(SymbolType type) {
 		this.type = type;
 	}
