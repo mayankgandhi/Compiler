@@ -93,7 +93,6 @@ public class EvalParser {
 	private void ret_type() throws Exception
     {
         Token nextToken = lookahead();
-
         if( nextToken.tokenType == TokenType.VOID )
         {
             match( nextToken, TokenType.VOID );
@@ -109,12 +108,10 @@ public class EvalParser {
         Token nextToken = lookahead();
         match( nextToken, TokenType.RETURN );
         ASTnode result = boolCompare();
-
         if( result == null )
         {
             return null;
         }
-
         nextToken = lookahead();
         match( nextToken,TokenType.SEMICOLON );
         return result;
@@ -128,16 +125,14 @@ public class EvalParser {
     private ASTnode arg_list() throws Exception
     {
         Token nextToken = lookahead();
-
         if( nextToken.tokenType != TokenType.COMMA )
         {
             return null;
         }
-
-        match( nextToken, TokenType.COMMA );
+        match(nextToken, TokenType.COMMA);
         ASTnode result = new ASTnode();
         ASTnode arg = arg();
-        while ( arg != null )
+        while (arg != null)
         {
             result.stmts.add( arg );
             arg = arg();
