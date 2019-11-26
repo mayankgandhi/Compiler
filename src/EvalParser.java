@@ -14,6 +14,7 @@ public class EvalParser {
 	int flabelID = 0; // Label id for false
 	int rlabelID = 0; // Label id for loops
 	private String threeAddress = "";
+	boolean func_decl=false;
 
 	private Table localTable;
 	Table globalTable = new Table();
@@ -64,7 +65,8 @@ public class EvalParser {
 		case INT:
 			temp = var_decl(true);
 			nextToken = lookahead();
-			match(nextToken, TokenType.SEMICOLON);
+			if(!func_decl)
+				match(nextToken, TokenType.SEMICOLON);
 			break;
 		case VOID:
 			temp = func();
@@ -77,7 +79,8 @@ public class EvalParser {
 			case INT:
 				temp = var_decl(true);
 				nextToken = lookahead();
-				match(nextToken, TokenType.SEMICOLON);
+				if(!func_decl)
+					match(nextToken, TokenType.SEMICOLON);
 				break;
 			case VOID:
 				temp = func();
@@ -90,15 +93,89 @@ public class EvalParser {
 		return result;
 	}
 
+	private ASTnode var_decl(boolean isGlobal) throws Exception {
+		func_decl=false;
+		Token nextToken = lookahead();
+		match(nextToken, TokenType.INT);
+		nextToken = lookahead();
+		match(nextToken, TokenType.ID);
+		if(lookahead().tokenType.equals(TokenType.LEFTPAREN)) {
+						func_decl = true;
+						return func(nextToken);
+		}
+		if (isGlobal) {
+			if (globalTable.findLocally(nextToken) == null) {
+				globalTable.add(nextToken.tokenVal, SymbolType.INT);
+			} else {
+				throw new CompilerException(
+						"ERROR: Function or variable \'" + nextToken.tokenVal + "\' already defined");
+			}
+		} else {
+			if (localTable.findLocally(nextToken) == null) {
+				localTable.add(nextToken.tokenVal, SymbolType.INT);
+			} else {
+				throw new CompilerException(
+						"ERROR: Function or variable \'" + nextToken.tokenVal + "\' already defined");
+			}
+		}
+		ASTnode aNode = new ASTnode(TokenType.ID, nextToken.tokenVal);
+		return aNode;
+	}
+
+	private ASTnode func(Token tok) throws Exception {
+		// Token nextToken = lookahead();
+		// ret_type();
+
+		// nextToken = lookahead();
+		// match(nextToken, TokenType.ID);
+		String funcName = tok.tokenVal;
+
+		Table prev = localTable;
+		localTable = new Table(prev);
+
+		if (globalTable.find(tok) == null) {
+			globalTable.add(funcName, SymbolType.FUNCTION);
+		} else {
+			System.out.println("ERROR: Function \'" + tok.tokenVal + "\' already defined");
+			System.exit(1);
+		}
+		Token nextToken = lookahead();
+		match(nextToken, TokenType.LEFTPAREN);
+		nextToken = lookahead();
+		ASTnode result = param_list();
+        ASTnode mid = new ASTnode();
+        nextToken = lookahead();
+		match(nextToken, TokenType.RIGHTPAREN);
+		nextToken = lookahead();
+		match(nextToken, TokenType.LEFTCURLY);
+		ASTnode right = stmt_list();
+        mid.left = result;
+        mid.right = right;
+        result = mid;
+		generateTACForFunc(result, false);
+		ArrayList<ThreeAddressObject> newObjects = new ArrayList<ThreeAddressObject>();
+		for (ThreeAddressObject t : tacObjects) {
+			newObjects.add(t);
+		}
+		tacObjects.clear();
+
+		CodeGenTuple aTuple = new CodeGenTuple(newObjects, localTable, funcName);
+		funcTuples.add(aTuple);
+
+		nextToken = lookahead();
+		match(nextToken, TokenType.RIGHTCURLY);
+		return result;
+	}
+
+
+
 	private void ret_type() throws Exception
     {
         Token nextToken = lookahead();
-        if( nextToken.tokenType == TokenType.VOID )
-        {
+        if( nextToken.tokenType == TokenType.VOID )	{
             match( nextToken, TokenType.VOID );
         }
-        else
-        {
+        else	{
             match( nextToken, TokenType.INT );
         }
     }
@@ -426,31 +503,6 @@ public class EvalParser {
 			System.exit(-1);
 		}
 
-	}
-
-	private ASTnode var_decl(boolean isGlobal) throws Exception {
-		Token nextToken = lookahead();
-		match(nextToken, TokenType.INT);
-		nextToken = lookahead();
-		match(nextToken, TokenType.ID);
-
-		if (isGlobal) {
-			if (globalTable.findLocally(nextToken) == null) {
-				globalTable.add(nextToken.tokenVal, SymbolType.INT);
-			} else {
-				throw new CompilerException(
-						"ERROR: Function or variable \'" + nextToken.tokenVal + "\' already defined");
-			}
-		} else {
-			if (localTable.findLocally(nextToken) == null) {
-				localTable.add(nextToken.tokenVal, SymbolType.INT);
-			} else {
-				throw new CompilerException(
-						"ERROR: Function or variable \'" + nextToken.tokenVal + "\' already defined");
-			}
-		}
-		ASTnode aNode = new ASTnode(TokenType.ID, nextToken.tokenVal);
-		return aNode;
 	}
 
 	private ASTnode param() throws Exception

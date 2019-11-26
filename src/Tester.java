@@ -21,7 +21,7 @@ public class Tester{
         System.out.println("*******************************************");
         System.out.println("Testing Three Address Generation");
 
-        String  eval = "public class test { int reserved; void mainEntry(int x, int y) {x=100; y = 5; reserved = x + y; } }";
+        String  eval = "public class test { int reserved; int voidns() {return 10;}  int mainEntry(int x, int y) {x=100; y = 5; reserved = x + y; } }";
         AdvancedJava parser = new AdvancedJava();
         String fileName = "test1.c";
         parser.codeGen(eval, fileName);
