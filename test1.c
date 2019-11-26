@@ -8,34 +8,29 @@ int64_t *sp = &stack[99];
 int64_t *fp = &stack[99];
 int64_t *ra = &&exit;
 goto mainEntry;
-main:
-sp = sp - 2;
-*(sp+2) = fp;
-*(sp+1) = ra;
-fp = sp;
-sp = sp - 0;
-
-
-sp = sp + 0;
-fp = *(sp+2);
-ra = *(sp+1);
-sp = sp + 2;
-goto *ra;
 mainEntry:
 sp = sp - 2;
 *(sp+2) = fp;
 *(sp+1) = ra;
 fp = sp;
-sp = sp - 2;
+sp = sp - 3;
 
-r1 = 0;
-*(fp-2) = r1;
-r1 = *(fp-2);
+r1 = 100;
 *(fp-1) = r1;
+r1 = *(fp-1);
+*(fp-2) = r1;
+r1 = 5;
+*(fp-1) = r1;
+r1 = *(fp-1);
+*(fp-3) = r1;
+r1 = *(fp-2);
+r2 = *(fp-3);
+r3 = r1 + r2;
+*(fp-1) = r3;
 r1 = *(fp-1);
 reserved = r1;
 
-sp = sp + 2;
+sp = sp + 3;
 fp = *(sp+2);
 ra = *(sp+1);
 sp = sp + 2;

@@ -551,7 +551,6 @@ public class EvalParser {
 			}
 			nextToken = lookahead();
 			//CHANGES
-			System.out.println("HERE");
 			match(nextToken, TokenType.ASSIGN);
 			ASTnode mid = new ASTnode(TokenType.ASSIGN);
 			ASTnode right = E();
@@ -1193,7 +1192,7 @@ public class EvalParser {
 
 	public static void main(String args[]) {
 		EvalParser parser = new EvalParser();
-		String eval = "public class test { int x; int y; int reserved; void mainEntry( int gh ) { reserved = 0; if(4 <= 3) {reserved = 42; }} }";
+		String eval = "public class test { int x; int y; int reserved; void mainEntry( int gh ) { gh = 5; reserved = gh; if(4 <= 3) {reserved = 42; } } }";
 		ASTnode root = parser.program(eval);
 		System.out.println("---------");
 		System.out.println(parser.emitTAC(root, false));
