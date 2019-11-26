@@ -64,6 +64,9 @@ public class Scanner {
             case "private":
                 aType = TokenType.PRIVATE;
                 break;
+            case "return":
+                aType = TokenType.RETURN;
+                break;
             case "class":
                 aType = TokenType.CLASS;
                 break;
@@ -75,6 +78,10 @@ public class Scanner {
             stream.deleteCharAt(0);
             aValue = String.valueOf(aChar);
             aType = TokenType.SEMICOLON;
+        } else if (aChar == ',') {
+            stream.deleteCharAt(0);
+            aValue = String.valueOf(aChar);
+            aType = TokenType.COMMA;
         } else if (aChar == '{') {
             stream.deleteCharAt(0);
             aValue = String.valueOf(aChar);
@@ -188,7 +195,7 @@ public class Scanner {
 
     public static void main(String args[])
     {
-        String eval = "private class test { int z ; void main2 ( ) { z = 14 ; } ";
+        String eval = "private class test { int z ; void main2 ( int x, int y ) { z = 14 ; return x; } ";
         Scanner ob = new Scanner();
         System.out.println(ob.extractTokens(eval));
     }
